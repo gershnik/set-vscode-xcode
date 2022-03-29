@@ -4,6 +4,10 @@ A script to enable VSCode native debugging on Mac with Xcode in a non-default lo
 To use
 
 * Download `set-vscode-xcode` script somewhere
+* Make it executable
+  ```console
+  chmod a+x set-vscode-xcode
+  ```
 * Run it: 
   ```console
   ./set-vscode-xcode
@@ -32,7 +36,7 @@ If you want to use non-default Xcode you can run `set-vscode-xcode` with `DEVELO
 Something like
 
 ```console
-$ DEVELOPER_DIR=/Path/To/A\ Different/Xcode.app/Contents/Developer ./set-vscode-xcode
+DEVELOPER_DIR=/Path/To/A\ Different/Xcode.app/Contents/Developer ./set-vscode-xcode
 ```
 
 
