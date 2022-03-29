@@ -1,5 +1,7 @@
 # set-vscode-xcode
-A script to enable VSCode native debugging on Mac with Xcode in a non-default location
+A script to enable VSCode native debugging on Mac with Xcode in a non-default location.
+
+More info about why this is needed and what it does can be found at [this article](https://gershnik.github.io/2022/03/29/vscode-cpp-debugging-non-default-xcode.html)
 
 To use
 
