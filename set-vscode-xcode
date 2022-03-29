@@ -1,0 +1,71 @@
+#! /usr/bin/env python3
+
+import subprocess
+import re
+import sys
+import os
+from pathlib import Path
+
+vsCodeLocation = Path('/Applications/Visual Studio Code.app')
+vsCodeExtensionsLocation = Path.home() / '.vscode/extensions'
+
+extensions = subprocess.run(
+    [vsCodeLocation / 'Contents/Resources/app/bin/code', '--list-extensions', '--show-versions'], 
+    check=True, capture_output=True, encoding='utf-8').stdout
+
+expCppTools = re.compile(r'^ms-vscode.cpptools@(\d+(:?\.\d+)*)$')
+extensionFolder = None
+for line in extensions.splitlines():
+    m = expCppTools.match(line)
+    if m:
+        extensionFolder = vsCodeExtensionsLocation / f'ms-vscode.cpptools-{m.group(1)}'
+        break
+
+if not extensionFolder or not extensionFolder.exists() or not extensionFolder.is_dir():
+    print("CppTools extension not installed", file=sys.stderr)
+    sys.exit(1)
+
+lldbMiPath = Path(extensionFolder) / 'debugAdapters/lldb-mi/bin/lldb-mi'
+
+if not lldbMiPath.exists():
+    print(f"lldb-mi not found at {lldbMiPath}", file=sys.stderr)
+    sys.exit(1)
+
+developerPath = Path(subprocess.run(['xcode-select', '-p'], 
+                                check=True, capture_output=True, encoding='utf-8').stdout)
+
+lldbFrameworkPath = developerPath.parent / 'SharedFrameworks/LLDB.framework'
+
+if not lldbFrameworkPath.exists():
+    print(f"LLDB.framework does not exist at {lldbFrameworkPath}", file=sys.stderr)
+    sys.exit(1)
+
+
+print(f'lldb-mi is at {lldbMiPath}')
+print(f'LLDB.framework is at {lldbFrameworkPath}')
+
+
+def linkFile(dest, linkPath):
+    if linkPath.exists():
+        if linkPath.is_symlink():
+            currentDest = Path(os.readlink(linkPath))
+            if not currentDest.is_absolute():
+                currentDest = linkPath.parent / dest
+            if currentDest == lldbFrameworkPath:
+                print(f'{linkPath} already linked')
+                return
+            else:
+                print(f'{linkPath} currently linked to {currentDest}, replacing')
+                linkPath.unlink()
+        else:
+            print(f'{linkPath} exists and not a link, aborting', file=sys.stderr)
+            sys.exit(1)
+    os.symlink(dest, linkPath)
+    print(f'{linkPath} linked to {dest}')
+
+
+stablePath = Path.home() / '.vscode-lldb-mi'
+stablePath.mkdir(parents=True, exist_ok=True)
+
+linkFile(lldbFrameworkPath, lldbMiPath.parent / 'LLDB.framework')
+linkFile(lldbMiPath, stablePath / 'lldb-mi')
