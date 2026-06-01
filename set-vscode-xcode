@@ -1,5 +1,7 @@
 #! /usr/bin/env python3
 
+# pylint: disable=invalid-name,missing-module-docstring,missing-function-docstring,line-too-long
+
 import subprocess
 import re
 import sys
@@ -10,10 +12,10 @@ vsCodeLocation = Path('/Applications/Visual Studio Code.app')
 vsCodeExtensionsLocation = Path.home() / '.vscode/extensions'
 
 extensions = subprocess.run(
-    [vsCodeLocation / 'Contents/Resources/app/bin/code', '--list-extensions', '--show-versions'], 
+    [vsCodeLocation / 'Contents/Resources/app/bin/code', '--list-extensions', '--show-versions'],
     check=True, capture_output=True, encoding='utf-8').stdout
 
-expCppTools = re.compile(r'^ms-vscode.cpptools@(\d+(:?\.\d+)*)$')
+expCppTools = re.compile(r'^ms-vscode.cpptools@(\d+(?:\.\d+)*)$')
 extensionFolder = None
 for line in extensions.splitlines():
     m = expCppTools.match(line)
@@ -27,14 +29,14 @@ if not extensionFolder or not extensionFolder.is_dir():
     print("CppTools extension not installed", file=sys.stderr)
     sys.exit(1)
 
-lldbMiPath = Path(extensionFolder) / 'debugAdapters/lldb-mi/bin/lldb-mi'
+lldbMiPath = extensionFolder / 'debugAdapters/lldb-mi/bin/lldb-mi'
 
 if not lldbMiPath.exists():
     print(f"lldb-mi not found at {lldbMiPath}", file=sys.stderr)
     sys.exit(1)
 
-developerPath = Path(subprocess.run(['xcode-select', '-p'], 
-                                check=True, capture_output=True, encoding='utf-8').stdout)
+developerPath = Path(subprocess.run(['xcode-select', '-p'],
+                                check=True, capture_output=True, encoding='utf-8').stdout.strip())
 
 lldbFrameworkPath = developerPath.parent / 'SharedFrameworks/LLDB.framework'
 
@@ -51,8 +53,8 @@ def linkFile(dest, linkPath):
     if linkPath.is_symlink():
         currentDest = Path(os.readlink(linkPath))
         if not currentDest.is_absolute():
-            currentDest = linkPath.parent / dest
-        if currentDest == lldbFrameworkPath:
+            currentDest = linkPath.parent / currentDest
+        if currentDest == dest:
             print(f'{linkPath} already linked')
             return
         else:
